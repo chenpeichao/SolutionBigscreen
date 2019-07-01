@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bigscreen.hubpd.com.mapper.weishu_pdmi.ArticleStatDayMapper" >
+  <resultMap id="BaseResultMap" type="bigscreen.hubpd.com.bean.weishu_pdmi.ArticleStatDay" >
+    <result column="ref_date" property="refDate" jdbcType="DATE" />
+    <result column="article_id" property="articleId" jdbcType="BIGINT" />
+    <result column="pub_account_id" property="pubAccountId" jdbcType="INTEGER" />
+    <result column="publish_date" property="publishDate" jdbcType="DATE" />
+    <result column="msgid" property="msgid" jdbcType="VARCHAR" />
+    <result column="msgindex" property="msgindex" jdbcType="INTEGER" />
+    <result column="total_read_num" property="totalReadNum" jdbcType="INTEGER" />
+    <result column="total_like_num" property="totalLikeNum" jdbcType="INTEGER" />
+  </resultMap>
+
+  <!--&lt;!&ndash; 根据公众号id集合以及指定时间间隔，查询其每日的阅读总和=======废弃 &ndash;&gt;-->
+  <!--<select id="selectReadNumAndLikeNumByPubAccountIdsAndDuringDate" resultType="bigscreen.hubpd.com.dto.OAWXChartLineDTO" parameterType="map" >-->
+    <!--SELECT IFNULL(SUM(max_read_num),0) readNum, IFNULL(SUM(max_like_num),0) likeNum, publish_date publishDate  FROM (-->
+    <!--SELECT tasd.publish_date, MAX(total_read_num) max_read_num, MAX(total_like_num) max_like_num, tasd.article_id, ta.url, ta.title-->
+    <!--FROM t_article ta-->
+    <!--LEFT JOIN t_article_stat_day tasd ON ta.id = tasd.article_id-->
+    <!--WHERE tasd.pub_account_id IN (-->
+    <!--<foreach collection="pubAccountIds" item="pubAccountId" separator=",">-->
+      <!--#{pubAccountId}-->
+    <!--</foreach>-->
+    <!--)-->
+    <!--<![CDATA[-->
+      <!--AND tasd.publish_date >= #{startDate} AND tasd.publish_date <= #{endDate}-->
+    <!--]]>-->
+    <!--GROUP BY tasd.article_id, tasd.publish_date-->
+    <!--) wx_article_table-->
+    <!--GROUP BY publish_date-->
+    <!--ORDER BY publish_date DESC-->
+  <!--</select>-->
+  <!-- 根据公众号id集合以及指定时间间隔，查询其每日的阅读总和 -->
+  <select id="selectReadNumAndLikeNumByPubAccountIdsAndDuringDate" resultType="bigscreen.hubpd.com.dto.OAWXChartLineDTO" parameterType="map" >
+    SELECT IFNULL(SUM(total_read_num),0) AS readNum,
+    IFNULL(SUM(total_like_num),0) AS likeNum,
+    tt.publish_date AS publishDate
+    FROM
+    (
+    SELECT *  FROM t_article_stat ts LEFT JOIN  (SELECT article_id AS art_id,MAX(ref_date) AS max_date FROM t_article_stat  GROUP BY article_id ) AS tsm
+    ON tsm.art_id = ts.article_id
+    <![CDATA[
+    WHERE #{startDate} <= ts.publish_date AND  #{endDate} >= ts.publish_date
+    ]]>
+    AND ref_date = max_date AND ts.pub_account_id  IN (
+    <foreach collection="pubAccountIds" item="pubAccountId" separator=",">
+      #{pubAccountId}
+    </foreach>
+    )) tt GROUP BY tt.publish_date ORDER BY tt.publish_date DESC
+  </select>
+  <!-- 查询指定公众号集合下文章阅读点赞倒序排列并得到相应指标 -->
+  <select id="selectTitleAndUrlByPubAccountIdsAndDuringDate" resultType="bigscreen.hubpd.com.dto.OAWXTopNArticleDTO" parameterType="map" >
+    SELECT tasd.publish_date publishDate, MAX(total_read_num) readNum, MAX(total_like_num) likeNum,
+                    tasd.article_id articleId, ta.url url, ta.title title
+    FROM t_article ta
+    LEFT JOIN t_article_stat_day tasd ON ta.id = tasd.article_id
+    WHERE tasd.pub_account_id IN (
+    <foreach collection="pubAccountIds" item="pubAccountId" separator=",">
+      #{pubAccountId}
+    </foreach>
+    )
+    <![CDATA[
+      AND tasd.publish_date >= #{startDate} AND tasd.publish_date <= #{endDate}
+    ]]>
+    GROUP BY tasd.article_id
+    ORDER BY readNum DESC, likeNum DESC
+    LIMIT #{start}, #{size};
+  </select>
+
+  <insert id="insert" parameterType="bigscreen.hubpd.com.bean.weishu_pdmi.ArticleStatDay" >
+    insert into t_article_stat_day (ref_date, article_id, pub_account_id, 
+      publish_date, msgid, msgindex, 
+      total_read_num, total_like_num)
+    values (#{refDate,jdbcType=DATE}, #{articleId,jdbcType=BIGINT}, #{pubAccountId,jdbcType=INTEGER}, 
+      #{publishDate,jdbcType=DATE}, #{msgid,jdbcType=VARCHAR}, #{msgindex,jdbcType=INTEGER}, 
+      #{totalReadNum,jdbcType=INTEGER}, #{totalLikeNum,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="bigscreen.hubpd.com.bean.weishu_pdmi.ArticleStatDay" >
+    insert into t_article_stat_day
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="refDate != null" >
+        ref_date,
+      </if>
+      <if test="articleId != null" >
+        article_id,
+      </if>
+      <if test="pubAccountId != null" >
+        pub_account_id,
+      </if>
+      <if test="publishDate != null" >
+        publish_date,
+      </if>
+      <if test="msgid != null" >
+        msgid,
+      </if>
+      <if test="msgindex != null" >
+        msgindex,
+      </if>
+      <if test="totalReadNum != null" >
+        total_read_num,
+      </if>
+      <if test="totalLikeNum != null" >
+        total_like_num,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="refDate != null" >
+        #{refDate,jdbcType=DATE},
+      </if>
+      <if test="articleId != null" >
+        #{articleId,jdbcType=BIGINT},
+      </if>
+      <if test="pubAccountId != null" >
+        #{pubAccountId,jdbcType=INTEGER},
+      </if>
+      <if test="publishDate != null" >
+        #{publishDate,jdbcType=DATE},
+      </if>
+      <if test="msgid != null" >
+        #{msgid,jdbcType=VARCHAR},
+      </if>
+      <if test="msgindex != null" >
+        #{msgindex,jdbcType=INTEGER},
+      </if>
+      <if test="totalReadNum != null" >
+        #{totalReadNum,jdbcType=INTEGER},
+      </if>
+      <if test="totalLikeNum != null" >
+        #{totalLikeNum,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+</mapper>

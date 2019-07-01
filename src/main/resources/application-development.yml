@@ -1,0 +1,39 @@
+server:
+  port: 8899
+
+#mybatis打印日志，注意是mapper的包
+logging:
+  level:
+     com.hubpd.bigscreen.mapper: debug
+
+# UAR_BASIC 数据源配置--用于获取指定机构下面的所有用户
+uar_basic:
+  datasource:
+    url: jdbc:mysql://10.10.32.62:3306/UAR_BASIC?useUnicode=true&characterEncoding=utf8
+    username: uardev
+    password: uardev2017
+    driverClassName: com.mysql.jdbc.Driver
+
+# weishu 数据源配置--用于获取微信相关数据
+weishu_pdmi:
+  datasource:
+    url: jdbc:mysql://10.16.27.1:3306/pdmi?useUnicode=true&characterEncoding=utf8
+    username: uargs
+    password: uargs2019
+    driverClassName: com.mysql.jdbc.Driver
+
+# 大屏接口数据返回值记录缓存库---包含uar_tag_dic_region和uar_origin_return_record表
+uar_profile:
+  datasource:
+    url: jdbc:mysql://10.10.32.62:3306/UAR_PROFILE?useUnicode=true&characterEncoding=utf8
+    username: uardev
+    password: uardev2017
+    driverClassName: com.mysql.jdbc.Driver
+
+# UAR_STATISTIC 数据源配置--用于获取指定应用下的pv、uv
+uar_statistic:
+  datasource:
+    url: jdbc:mysql://10.10.32.62:3306/UAR_STATISTIC?useUnicode=true&characterEncoding=utf8
+    username: uardev
+    password: uardev2017
+    driverClassName: com.mysql.jdbc.Driver

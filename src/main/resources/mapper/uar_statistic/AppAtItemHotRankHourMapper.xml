@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bigscreen.hubpd.com.mapper.uar_statistic.AppAtItemHotRankHourMapper" >
+  <resultMap id="BaseResultMap" type="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    <id column="at" property="at" jdbcType="VARCHAR" />
+    <id column="title" property="title" jdbcType="VARCHAR" />
+    <id column="day" property="day" jdbcType="INTEGER" />
+    <id column="hour" property="hour" jdbcType="INTEGER" />
+    <result column="pv" property="pv" jdbcType="BIGINT" />
+  </resultMap>
+  <resultMap id="ResultMapWithBLOBs" type="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" extends="BaseResultMap" >
+    <result column="url" property="url" jdbcType="LONGVARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    at, title, day, hour, pv
+  </sql>
+  <sql id="Blob_Column_List" >
+    url
+  </sql>
+
+  <!-- 获取指定应用集合的url求topn的pv数 -->
+  <select id="getPVAndUrlAndTitleByAppKeyAndDate" resultType="bigscreen.hubpd.com.dto.COAppItemRankDTO" parameterType="map" >
+    SELECT title, url, SUM(pv) pv
+    FROM app_at_item_hot_rank_hour aaihrh
+    WHERE aaihrh.at IN (
+    <foreach collection="appKeySet" item="appKey" separator=",">
+      #{appKey}
+    </foreach>
+    )
+    AND CONCAT(aaihrh.day, aaihrh.hour) >= CONCAT(#{startDay}, #{startHour})
+    GROUP BY aaihrh.item_id
+    ORDER BY pv DESC
+    LIMIT 0, #{size}
+  </select>
+
+  <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHourKey" >
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from app_at_item_hot_rank_hour
+    where at = #{at,jdbcType=VARCHAR}
+      and title = #{title,jdbcType=VARCHAR}
+      and day = #{day,jdbcType=INTEGER}
+      and hour = #{hour,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHourKey" >
+    delete from app_at_item_hot_rank_hour
+    where at = #{at,jdbcType=VARCHAR}
+      and title = #{title,jdbcType=VARCHAR}
+      and day = #{day,jdbcType=INTEGER}
+      and hour = #{hour,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    insert into app_at_item_hot_rank_hour (at, title, day, 
+      hour, pv, url)
+    values (#{at,jdbcType=VARCHAR}, #{title,jdbcType=VARCHAR}, #{day,jdbcType=INTEGER}, 
+      #{hour,jdbcType=INTEGER}, #{pv,jdbcType=BIGINT}, #{url,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    insert into app_at_item_hot_rank_hour
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="at != null" >
+        at,
+      </if>
+      <if test="title != null" >
+        title,
+      </if>
+      <if test="day != null" >
+        day,
+      </if>
+      <if test="hour != null" >
+        hour,
+      </if>
+      <if test="pv != null" >
+        pv,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="at != null" >
+        #{at,jdbcType=VARCHAR},
+      </if>
+      <if test="title != null" >
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="day != null" >
+        #{day,jdbcType=INTEGER},
+      </if>
+      <if test="hour != null" >
+        #{hour,jdbcType=INTEGER},
+      </if>
+      <if test="pv != null" >
+        #{pv,jdbcType=BIGINT},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    update app_at_item_hot_rank_hour
+    <set >
+      <if test="pv != null" >
+        pv = #{pv,jdbcType=BIGINT},
+      </if>
+      <if test="url != null" >
+        url = #{url,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where at = #{at,jdbcType=VARCHAR}
+      and title = #{title,jdbcType=VARCHAR}
+      and day = #{day,jdbcType=INTEGER}
+      and hour = #{hour,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    update app_at_item_hot_rank_hour
+    set pv = #{pv,jdbcType=BIGINT},
+      url = #{url,jdbcType=LONGVARCHAR}
+    where at = #{at,jdbcType=VARCHAR}
+      and title = #{title,jdbcType=VARCHAR}
+      and day = #{day,jdbcType=INTEGER}
+      and hour = #{hour,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bigscreen.hubpd.com.bean.uar_statistic.AppAtItemHotRankHour" >
+    update app_at_item_hot_rank_hour
+    set pv = #{pv,jdbcType=BIGINT}
+    where at = #{at,jdbcType=VARCHAR}
+      and title = #{title,jdbcType=VARCHAR}
+      and day = #{day,jdbcType=INTEGER}
+      and hour = #{hour,jdbcType=INTEGER}
+  </update>
+</mapper>

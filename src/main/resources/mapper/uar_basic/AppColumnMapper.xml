@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="bigscreen.hubpd.com.mapper.uar_basic.AppColumnMapper" >
+  <resultMap id="BaseResultMap" type="bigscreen.hubpd.com.bean.uar_basic.AppColumn" >
+    <id column="columnid" property="columnid" jdbcType="INTEGER" />
+    <result column="appid" property="appid" jdbcType="INTEGER" />
+    <result column="parentid" property="parentid" jdbcType="INTEGER" />
+    <result column="columnlevel" property="columnlevel" jdbcType="INTEGER" />
+    <result column="columnname" property="columnname" jdbcType="VARCHAR" />
+    <result column="columntag" property="columntag" jdbcType="VARCHAR" />
+    <result column="columntype" property="columntype" jdbcType="VARCHAR" />
+    <result column="matchtype" property="matchtype" jdbcType="TINYINT" />
+    <result column="columnpath" property="columnpath" jdbcType="VARCHAR" />
+    <result column="atime" property="atime" jdbcType="TIMESTAMP" />
+    <result column="aid" property="aid" jdbcType="CHAR" />
+    <result column="mtime" property="mtime" jdbcType="TIMESTAMP" />
+    <result column="mid" property="mid" jdbcType="CHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    columnid, appid, parentid, columnlevel, columnname, columntag, columntype, matchtype, 
+    columnpath, atime, aid, mtime, mid
+  </sql>
+
+  <!-- 根据应用appId和栏目tag关联栏目表进行栏目中文名查询 -->
+  <select id="findColumnNameByAppIdAndColumnTag" resultType="String" parameterType="map" >
+    SELECT tac.columnname FROM t_app_column tac WHERE tac.columntag = #{columntag} AND tac.appid = #{appid}
+  </select>
+
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select
+    <include refid="Base_Column_List" />
+    from t_app_column
+    where columnid = #{columnid,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_app_column
+    where columnid = #{columnid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="bigscreen.hubpd.com.bean.uar_basic.AppColumn" >
+    insert into t_app_column (columnid, appid, parentid, 
+      columnlevel, columnname, columntag, 
+      columntype, matchtype, columnpath, 
+      atime, aid, mtime, 
+      mid)
+    values (#{columnid,jdbcType=INTEGER}, #{appid,jdbcType=INTEGER}, #{parentid,jdbcType=INTEGER}, 
+      #{columnlevel,jdbcType=INTEGER}, #{columnname,jdbcType=VARCHAR}, #{columntag,jdbcType=VARCHAR}, 
+      #{columntype,jdbcType=VARCHAR}, #{matchtype,jdbcType=TINYINT}, #{columnpath,jdbcType=VARCHAR}, 
+      #{atime,jdbcType=TIMESTAMP}, #{aid,jdbcType=CHAR}, #{mtime,jdbcType=TIMESTAMP}, 
+      #{mid,jdbcType=CHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="bigscreen.hubpd.com.bean.uar_basic.AppColumn" >
+    insert into t_app_column
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="columnid != null" >
+        columnid,
+      </if>
+      <if test="appid != null" >
+        appid,
+      </if>
+      <if test="parentid != null" >
+        parentid,
+      </if>
+      <if test="columnlevel != null" >
+        columnlevel,
+      </if>
+      <if test="columnname != null" >
+        columnname,
+      </if>
+      <if test="columntag != null" >
+        columntag,
+      </if>
+      <if test="columntype != null" >
+        columntype,
+      </if>
+      <if test="matchtype != null" >
+        matchtype,
+      </if>
+      <if test="columnpath != null" >
+        columnpath,
+      </if>
+      <if test="atime != null" >
+        atime,
+      </if>
+      <if test="aid != null" >
+        aid,
+      </if>
+      <if test="mtime != null" >
+        mtime,
+      </if>
+      <if test="mid != null" >
+        mid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="columnid != null" >
+        #{columnid,jdbcType=INTEGER},
+      </if>
+      <if test="appid != null" >
+        #{appid,jdbcType=INTEGER},
+      </if>
+      <if test="parentid != null" >
+        #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="columnlevel != null" >
+        #{columnlevel,jdbcType=INTEGER},
+      </if>
+      <if test="columnname != null" >
+        #{columnname,jdbcType=VARCHAR},
+      </if>
+      <if test="columntag != null" >
+        #{columntag,jdbcType=VARCHAR},
+      </if>
+      <if test="columntype != null" >
+        #{columntype,jdbcType=VARCHAR},
+      </if>
+      <if test="matchtype != null" >
+        #{matchtype,jdbcType=TINYINT},
+      </if>
+      <if test="columnpath != null" >
+        #{columnpath,jdbcType=VARCHAR},
+      </if>
+      <if test="atime != null" >
+        #{atime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="aid != null" >
+        #{aid,jdbcType=CHAR},
+      </if>
+      <if test="mtime != null" >
+        #{mtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="mid != null" >
+        #{mid,jdbcType=CHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="bigscreen.hubpd.com.bean.uar_basic.AppColumn" >
+    update t_app_column
+    <set >
+      <if test="appid != null" >
+        appid = #{appid,jdbcType=INTEGER},
+      </if>
+      <if test="parentid != null" >
+        parentid = #{parentid,jdbcType=INTEGER},
+      </if>
+      <if test="columnlevel != null" >
+        columnlevel = #{columnlevel,jdbcType=INTEGER},
+      </if>
+      <if test="columnname != null" >
+        columnname = #{columnname,jdbcType=VARCHAR},
+      </if>
+      <if test="columntag != null" >
+        columntag = #{columntag,jdbcType=VARCHAR},
+      </if>
+      <if test="columntype != null" >
+        columntype = #{columntype,jdbcType=VARCHAR},
+      </if>
+      <if test="matchtype != null" >
+        matchtype = #{matchtype,jdbcType=TINYINT},
+      </if>
+      <if test="columnpath != null" >
+        columnpath = #{columnpath,jdbcType=VARCHAR},
+      </if>
+      <if test="atime != null" >
+        atime = #{atime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="aid != null" >
+        aid = #{aid,jdbcType=CHAR},
+      </if>
+      <if test="mtime != null" >
+        mtime = #{mtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="mid != null" >
+        mid = #{mid,jdbcType=CHAR},
+      </if>
+    </set>
+    where columnid = #{columnid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="bigscreen.hubpd.com.bean.uar_basic.AppColumn" >
+    update t_app_column
+    set appid = #{appid,jdbcType=INTEGER},
+      parentid = #{parentid,jdbcType=INTEGER},
+      columnlevel = #{columnlevel,jdbcType=INTEGER},
+      columnname = #{columnname,jdbcType=VARCHAR},
+      columntag = #{columntag,jdbcType=VARCHAR},
+      columntype = #{columntype,jdbcType=VARCHAR},
+      matchtype = #{matchtype,jdbcType=TINYINT},
+      columnpath = #{columnpath,jdbcType=VARCHAR},
+      atime = #{atime,jdbcType=TIMESTAMP},
+      aid = #{aid,jdbcType=CHAR},
+      mtime = #{mtime,jdbcType=TIMESTAMP},
+      mid = #{mid,jdbcType=CHAR}
+    where columnid = #{columnid,jdbcType=INTEGER}
+  </update>
+</mapper>

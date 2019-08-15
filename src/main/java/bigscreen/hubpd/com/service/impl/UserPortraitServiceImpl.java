@@ -64,7 +64,16 @@ public class UserPortraitServiceImpl implements UserPortraitService {
 
         Set<String> appKeyByLesseeIdAndAppType = appInfoService.getAppKeyByLesseeIdAndAppType(orginId, null);
 
-        List<UserAreaCountDTO> userCountInProvinceByAppKeySet = userAreaCountService.findUserCountInProvinceByAppKeySet(appKeyByLesseeIdAndAppType);
+        List<UserAreaCountDTO> userCountInProvinceByAppKeySet = new ArrayList<UserAreaCountDTO>();
+
+        if(null == appKeyByLesseeIdAndAppType) {
+            resultMap.put("data", userCountInProvinceByAppKeySet);
+            resultMap.put("code", 0);
+            resultMap.put("totalRecordNum", userCountInProvinceByAppKeySet.size());
+            return resultMap;
+        }
+
+        userCountInProvinceByAppKeySet = userAreaCountService.findUserCountInProvinceByAppKeySet(appKeyByLesseeIdAndAppType);
 
         //查询用户画像地域字典表
         Map<String, String> allProfileProvinceAndShouNameDic = uarProfileBigscreenAreaDicService.getAllProfileProvinceAndShouNameDic();

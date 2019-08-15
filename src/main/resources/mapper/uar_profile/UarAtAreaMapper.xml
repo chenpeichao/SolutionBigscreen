@@ -33,7 +33,11 @@
   <!-- 根据appkey集合查询其下市级别的用户数 -->
   <select id="findUserCountInProvinceByAppKeySet" resultType="bigscreen.hubpd.com.dto.UserAreaCountDTO" parameterType="java.util.Map">
     SELECT province regionName, COUNT(DISTINCT(UUID)) AS num FROM uar_at_area
-    WHERE at IN #{appKey}
+    WHERE at IN (
+      <foreach collection="appKeySet" item="appKey" separator=",">
+        #{appKey}
+      </foreach>
+    )
     GROUP BY province
     ORDER BY num DESC, province
   </select>

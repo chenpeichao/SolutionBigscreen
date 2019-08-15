@@ -22,4 +22,10 @@ public interface MediaMapper {
      * @return
      */
     public Media findMediaByOrgIdAndSystype(Map<String, Object> paramMap);
+
+    /**
+     * 根据系统类型和机构id查询是否存在此机构
+     * @return
+     */
+    public Media findMediaByOrgId(Map<String, Object> paramMap);
 }

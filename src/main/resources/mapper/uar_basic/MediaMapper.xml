@@ -18,6 +18,11 @@
     SELECT * FROM t_media tm WHERE tm.sys_type = #{sysType} AND tm.mediaid = #{orgId} limit 0, 1
   </select>
 
+  <!-- 根据系统类型和机构id查询是否存在此机构 -->
+  <select id="findMediaByOrgId" parameterType="map" resultType="bigscreen.hubpd.com.bean.uar_basic.Media">
+    SELECT * FROM t_media tm WHERE tm.mediaid = #{orgId} limit 0, 1
+  </select>
+
   <insert id="insert" parameterType="bigscreen.hubpd.com.bean.uar_basic.Media" >
     insert into t_media (mediaid, medianame, status, 
       sys_type)

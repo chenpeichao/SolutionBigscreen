@@ -1,6 +1,7 @@
 package bigscreen.hubpd.com.service.impl;
 
 import bigscreen.hubpd.com.bean.uar_profile.OriginReturnRecord;
+import bigscreen.hubpd.com.bean.uar_profile.OriginReturnRecordAllProvinceRegion;
 import bigscreen.hubpd.com.bean.uar_profile.UarProfileBigscreenAreaDic;
 import bigscreen.hubpd.com.dto.UserAreaCountDTO;
 import bigscreen.hubpd.com.service.*;
@@ -42,11 +43,15 @@ public class UserPortraitServiceImpl implements UserPortraitService {
     @Autowired
     private OriginReturnRecordService originReturnRecordService;
     @Autowired
+    private OriginReturnRecordAllProvinceRegionService originReturnRecordAllProvinceRegionService;
+    @Autowired
     private MediaService mediaService;
     @Autowired
     private UarProfileBigscreenAreaDicService uarProfileBigscreenAreaDicService;
     @Autowired
     private UserAreaCountService userAreaCountService;
+    @Autowired
+    private UarBasicTaskOrginService uarBasicTaskOrginService;
 
     /**
      * 用户地域接口，获取各省（topN）分布用户数
@@ -152,6 +157,67 @@ public class UserPortraitServiceImpl implements UserPortraitService {
 
         resultMap.put("code", 0);
         resultMap.put("data", dataListMap);
+        return resultMap;
+    }
+
+    /**
+     * 用户分析接口，计算性别，青老中，全省份地域
+     *
+     * @param orginId 机构id
+     * @return
+     */
+    public Map<String, Object> getUserAnalyseAllRegion(String orginId) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+
+        List<String> allOriginIdListInBigscreen = uarBasicTaskOrginService.findAllOriginIdListInBigscreen();
+        if(null == allOriginIdListInBigscreen || allOriginIdListInBigscreen.size() == 0 || !allOriginIdListInBigscreen.contains(orginId.trim())) {
+            resultMap.put("code", ErrorCode.ERROR_CODE_NOT_FOUND_MEDIA_ID);
+            resultMap.put("message", "系统中不存在指定机构,请联系管理员添加");
+            return resultMap;
+        }
+
+        String currentDateStr = DateUtils.getDateStrByDate(new Date(), "yyyy-MM-dd");
+
+        // 首先从mysql数据库中查询数据，如果有数据，则直接返回，没有则进行es计算返回，并保存查询天和机构的数据到mysql数据库缓存
+        String originReturnRecordStr = originReturnRecordAllProvinceRegionService.findReturnRecordByOriginId(orginId, currentDateStr);
+        if (StringUtils.isNotBlank(originReturnRecordStr)) {
+            resultMap.put("code", 0);
+            resultMap.put("data", JSON.parse(originReturnRecordStr));
+            return resultMap;
+        }
+
+
+        // 对于指定机构在指定查询日期的返回数据，进行mysql数据库的缓存
+        String returnDate = originReturnRecordService.findOriginReturnRecordByOriginId(orginId, currentDateStr);
+
+        if (StringUtils.isNotBlank(returnDate)) {
+            resultMap.put("code", 0);
+            resultMap.put("data", returnDate);
+        } else {
+            List<Map<String, Object>> dataListMap = new ArrayList<Map<String, Object>>();
+            Set<String> appKeyByLesseeIdAndAppType = appInfoService.getAppKeyByLesseeIdAndAppType(orginId, null);
+
+            logger.info("画像（全省份）接口查询机构id为：" + orginId);
+            // 对于机构对应的用户以及公众号进行打印
+            logger.info("在【" + DateUtils.getDateStrByDate(new Date(), "yyyy-MM-dd HH:mm:ss") + "】查询机构id为【" + orginId + "】，对应应用信息为【" + appKeyByLesseeIdAndAppType.toString() + "】");
+
+            getGenderAndAgeAndAreaData(appKeyByLesseeIdAndAppType, dataListMap, "province");
+
+            logger.info("机构id为【" + orginId + "】的数据打印完成【"+dataListMap+"】");
+
+            OriginReturnRecordAllProvinceRegion originReturnRecordAllProvinceRegion = new OriginReturnRecordAllProvinceRegion();
+            originReturnRecordAllProvinceRegion.setOriginId(orginId);
+            originReturnRecordAllProvinceRegion.setReturnDate(currentDateStr);
+            originReturnRecordAllProvinceRegion.setReturnJson(JSON.toJSONString(dataListMap));
+
+            //接口返回记录保存mysql，缓存
+            originReturnRecordAllProvinceRegionService.insert(originReturnRecordAllProvinceRegion);
+
+            resultMap.put("code", 0);
+            resultMap.put("data", JSON.toJSONString(dataListMap));
+        }
+
+
         return resultMap;
     }
 
@@ -287,11 +353,13 @@ public class UserPortraitServiceImpl implements UserPortraitService {
      * 对于appkey集合下的性别、年龄和地域的数据进行封装----生产数据
      * @param appKeyByLesseeIdAndAppType        appkey的集合
      * @param dataListMap                       数据封装结果
+     * @param regionLevel                       地域聚合级别(province：省份；other：城市)
      */
-    private void getGenderAndAgeAndAreaData(Set<String> appKeyByLesseeIdAndAppType, List<Map<String, Object>> dataListMap) {
+    private void getGenderAndAgeAndAreaData(Set<String> appKeyByLesseeIdAndAppType, List<Map<String, Object>> dataListMap, String regionLevel) {
         if(null != appKeyByLesseeIdAndAppType && appKeyByLesseeIdAndAppType.size() > 0) {
+            Map<String, Object> genderAndAgeAndRegionMap = new HashMap<String, Object>();
+
             Map<String, Object> genderMap = new HashMap<String, Object>();
-            Map<String, Object> resultGenderMap = new HashMap<String, Object>();
             Map<String, Object> ageMap = new HashMap<String, Object>();
             Long maleNum = getTotalElements(appKeyByLesseeIdAndAppType, "sex", "男");
             Long female = getTotalElements(appKeyByLesseeIdAndAppType, "sex", "女");
@@ -299,7 +367,7 @@ public class UserPortraitServiceImpl implements UserPortraitService {
             genderMap.put("femaleNum", female);
             genderMap.put("maleNum", maleNum);
             genderTmpListMap.add(genderMap);
-            resultGenderMap.put("gender", genderTmpListMap);
+            genderAndAgeAndRegionMap.put("gender", genderTmpListMap);
             Long young = getTotalElements(appKeyByLesseeIdAndAppType, "age", "青年");
             Long middleNum = getTotalElements(appKeyByLesseeIdAndAppType, "age", "中年");
             Long oldNum = getTotalElements(appKeyByLesseeIdAndAppType, "age", "老年");
@@ -308,12 +376,18 @@ public class UserPortraitServiceImpl implements UserPortraitService {
             ageMap.put("oldNum", oldNum);
             List<Map<String, Object>> ageTmpListMap = new ArrayList<Map<String, Object>>();
             ageTmpListMap.add(ageMap);
-            resultGenderMap.put("age", ageTmpListMap);
+            genderAndAgeAndRegionMap.put("age", ageTmpListMap);
 
-            //地域聚合
-            List<Map<String, Object>> resultCityRegion = getAggregationsCity(appKeyByLesseeIdAndAppType);
-            resultGenderMap.put("region", resultCityRegion);
-            dataListMap.add(resultGenderMap);
+            if(StringUtils.isNotBlank(regionLevel) && "province".equals(regionLevel)) {
+                //地域聚合
+                List<Map<String, Object>> resultProvinceRegion = getAggregationsProvince(appKeyByLesseeIdAndAppType);
+                genderAndAgeAndRegionMap.put("region", resultProvinceRegion);
+            } else {
+                //地域聚合
+                List<Map<String, Object>> resultCityRegion = getAggregationsCity(appKeyByLesseeIdAndAppType);
+                genderAndAgeAndRegionMap.put("region", resultCityRegion);
+            }
+            dataListMap.add(genderAndAgeAndRegionMap);
         }
     }
 
@@ -330,6 +404,20 @@ public class UserPortraitServiceImpl implements UserPortraitService {
     @Async
     public Map<String, Object> getAsyncUserAnalyse(String orginId, Integer sysType) {
         return getUserAnalyse(orginId, sysType);
+    }
+
+    /**
+     * 用户分析接口，计算性别，青老中，全省份地域
+     *
+     * @param orginId 机构id
+     * @return
+     */
+    /**
+     * 这里进行标注为异步任务，在执行此方法的时候，会单独开启线程来执行---但是此方法不能再本类调用
+     */
+    @Async
+    public Map<String, Object> getAsyncUserAnalyseAllRegion(String orginId) {
+        return getUserAnalyseAllRegion(orginId);
     }
 
     /**
@@ -373,6 +461,49 @@ public class UserPortraitServiceImpl implements UserPortraitService {
             e.printStackTrace();
         }
         return resultCityRegion;
+    }
+
+    /**
+     * 对省份进行聚合查询
+     *
+     * @param atSet      appkey应用标识
+     * @return
+     */
+    public List<Map<String, Object>> getAggregationsProvince(Set<String> atSet) {
+        List<Map<String, Object>> resultProvinceRegion = new ArrayList<Map<String, Object>>();
+
+        TransportClient client = null;
+        try {
+            client = ProfileESClient.getClientIns();
+            BoolQueryBuilder builder = QueryBuilders.boolQuery();
+            builder.must(atQuery(atSet));
+            builder.must(QueryBuilders.rangeQuery("tag_count").gt(0));
+
+            AggregationBuilder agg = AggregationBuilders.terms("Province")
+                    .field("province").size(0);
+            SearchResponse sr = client
+                    .prepareSearch(ESConfigConstants.ES_PROFILE_INDEX_OFFLINE_USER_PROFILE)
+                    .setTypes(ESConfigConstants.ES_PROFILE_TYPE_USER_TAGS)
+                    .setQuery(
+                            QueryBuilders.boolQuery()
+                                    .filter(builder)
+                    ).setSize(0).addAggregation(agg)
+                    .execute().actionGet();
+            Terms aggTerms = sr.getAggregations().get("Province");
+            List<Terms.Bucket> tag = aggTerms.getBuckets();
+
+
+            for (int i = 0; i < tag.size(); i++) {
+                Map<String, Object> tmpMap = new HashMap<String, Object>();
+                tmpMap.put("regionName", tag.get(i).getKey().toString());
+                tmpMap.put("num", tag.get(i).getDocCount());
+                resultProvinceRegion.add(tmpMap);
+            }
+        } catch (IOException e) {
+            logger.error("es配置信息错误");
+            e.printStackTrace();
+        }
+        return resultProvinceRegion;
     }
 
     // 同时符合条件

@@ -45,4 +45,15 @@ public class MediaServiceImpl implements MediaService {
         paramMap.put("sysType", sysType);
         return mediaMapper.findMediaByOrgIdAndSystype(paramMap);
     }
+
+    /**
+     * 根据系统类型和机构id查询是否存在此机构
+     * @param orgId
+     * @return
+     */
+    public Media findMediaByOrgId(String orgId) {
+        Map<String, Object> paramMap = new HashMap<String, Object>();
+        paramMap.put("orgId", orgId);
+        return mediaMapper.findMediaByOrgId(paramMap);
+    }
 }

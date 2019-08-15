@@ -138,4 +138,37 @@ public class UserPortraitController {
             return resultMap;
         }
     }
+
+    /**
+     * 用户画像
+     * @param request
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/userPortraitAgeAndGenderAndProvinceRegion")
+    public Map<String, Object> userPortraitAgeAndGenderAndProvinceRegion(HttpServletRequest request, HttpServletResponse response){
+        // 解决跨域问题
+        response.setHeader("Access-Control-Allow-Origin", "*");
+
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+
+        logger.info("request param 【"+request.getQueryString()+"】");
+
+        String orginIdStr = StringUtils.isNotBlank(request.getParameter("orginId"))?request.getParameter("orginId").trim():request.getParameter("orginId");
+
+        if(StringUtils.isBlank(orginIdStr)) {
+            resultMap.put("code", ErrorCode.ERROR_CODE_PARAM_NOT_FOUND);
+            resultMap.put("message", "request param orginIdStr lack");
+            return resultMap;
+        }
+
+        try {
+            return userPortraitService.getUserAnalyseAllRegion(orginIdStr);
+        } catch (Exception e) {
+            logger.error("channelRank频道排行接口调用失败-发生未知错误", e);
+            resultMap.put("code", 1000);
+            resultMap.put("message", "接口调用失败，请重试");
+            return resultMap;
+        }
+    }
 }

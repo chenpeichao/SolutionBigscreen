@@ -25,4 +25,11 @@ public interface MediaService {
      * @return
      */
     public Media findMediaByOrgIdAndSystype(String orgId, Integer sysType);
+
+    /**
+     * 根据系统类型和机构id查询是否存在此机构
+     * @param orgId
+     * @return
+     */
+    public Media findMediaByOrgId(String orgId);
 }

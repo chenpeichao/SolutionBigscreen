@@ -1,0 +1,1 @@
+注意：线上生产环境(10.10.32.60)中对于画像接口返回对于镇原租户进行特殊处理了，注意OriginReturnRecordMapper.xml文件中findOriginReturnRecordByOriginId方法；
